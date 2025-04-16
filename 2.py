@@ -3,7 +3,6 @@ import pygame
 import json
 import random
 
-# Подключение к БД
 def connect_db():
     return psycopg2.connect(
         dbname="phonebook_db",

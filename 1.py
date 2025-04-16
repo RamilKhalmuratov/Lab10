@@ -21,7 +21,14 @@ def create_table():
     """)
     conn.commit()
     conn.close()
-    print("✅ Таблица 'phonebook' создана/проверена")
+
+def create_csv_file():
+    try:
+        with open('phones.csv', 'x', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerow(['first_name', 'phone'])
+    except FileExistsError:
+        pass
 
 def insert_from_csv():
     conn = connect_db()
@@ -29,7 +36,7 @@ def insert_from_csv():
     try:
         with open('phones.csv', 'r') as f:
             reader = csv.reader(f)
-            next(reader) 
+            next(reader)
             for row in reader:
                 cursor.execute(
                     "INSERT INTO phonebook (first_name, phone) VALUES (%s, %s)",
@@ -53,7 +60,14 @@ def insert_from_console():
     )
     conn.commit()
     conn.close()
-    print(f"✅ Контакт '{name}' добавлен!")
+    print(f"✅ Контакт '{name}' добавлен в базу данных!")
+    try:
+        with open('phones.csv', 'a', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerow([name, phone])
+        print(f"✅ Контакт '{name}' добавлен в файл phones.csv!")
+    except Exception as e:
+        print(f"❌ Ошибка при записи в CSV: {e}")
 
 def update_data():
     user_id = input("Введите ID контакта: ")
@@ -106,11 +120,22 @@ def query_data():
         print("❌ Ничего не найдено.")
     conn.close()
 
+def show_all_contacts():
+    conn = connect_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM phonebook ORDER BY id")
+    results = cursor.fetchall()
+    print("\n📋 Все сохранённые контакты:")
+    for row in results:
+        print(f"ID: {row[0]}, Имя: {row[1]}, Телефон: {row[2]}")
+    conn.close()
+
 def main():
     create_table()
+    create_csv_file()
     while True:
         print("\n=== PhoneBook Manager ===")
-        print("1. Добавить из CSV\n2. Добавить вручную\n3. Обновить\n4. Удалить\n5. Поиск\n6. Выход")
+        print("1. Добавить из CSV\n2. Добавить вручную\n3. Обновить\n4. Удалить\n5. Поиск\n6. Показать все\n7. Выход")
         choice = input("Выберите действие: ").strip()
         if choice == "1":
             insert_from_csv()
@@ -123,6 +148,8 @@ def main():
         elif choice == "5":
             query_data()
         elif choice == "6":
+            show_all_contacts()
+        elif choice == "7":
             print("Выход из программы.")
             break
         else:
